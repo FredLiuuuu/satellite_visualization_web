@@ -37,7 +37,7 @@ const STLViewer: React.FC = () => {
       stlMesh = new THREE.Mesh(geometry, stlMaterial);
 
       // Increase the size of the model
-      stlMesh.scale.set(1, 1, 1); // You can adjust this value to make it larger
+      stlMesh.scale.set(0.8, 0.8, 0.8); // You can adjust this value to make it larger
 
       scene.add(stlMesh);
 
@@ -62,8 +62,8 @@ const STLViewer: React.FC = () => {
 
       // Rotate STL model
       if (stlMesh) {
-        stlMesh.rotation.x += 0.01;
-        stlMesh.rotation.y += 0.01;
+        stlMesh.rotation.x += 0.009;
+        stlMesh.rotation.y += 0.009;
       }
 
       renderer.render(scene, camera);
