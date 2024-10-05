@@ -1,10 +1,13 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client'; // React 18 new API
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import App from './App';
 import WorkInProgress from './WorkInProgress';
 
-ReactDOM.render(
+const container = document.getElementById('root');
+const root = createRoot(container!); // Use createRoot
+
+root.render(
   <React.StrictMode>
     <Router>
       <Routes>
@@ -12,6 +15,6 @@ ReactDOM.render(
         <Route path="/work-in-progress" element={<WorkInProgress />} />
       </Routes>
     </Router>
-  </React.StrictMode>,
-  document.getElementById('root')
+  </React.StrictMode>
 );
+
