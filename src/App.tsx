@@ -7,13 +7,13 @@ const App: React.FC = () => {
   const [satelliteData, setSatelliteData] = useState<string[]>([]);
 
   useEffect(() => {
-    // Fetch CSV data from the public folder
-    fetch('/Satellite_Trajectory.csv')
+    // Fetch .txt data from the public folder
+    fetch('/satellite_trajectory_data.txt') // Update to the correct file path
       .then(response => response.text())
-      .then(data => {
-        // Split CSV data into rows
-        const rows = data.split('\n');
-        setSatelliteData(rows); // Set the rows as satelliteData
+      .then(text => {
+        // Split text data into rows and set the rows as satelliteData
+        const lines = text.split('\n');
+        setSatelliteData(lines); // Set the lines as satelliteData
       });
   }, []);
 

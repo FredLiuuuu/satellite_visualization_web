@@ -1,46 +1,63 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
 
-interface STLViewerProps {
-  satelliteData: string[];
+// Define the interface for parsed data
+interface ParsedData {
+  messageId: string;
+  date: Date;  // Date as JavaScript Date object
+  position: { x: number; y: number; z: number };
+  rotation: { yaw: number; pitch: number; roll: number };
 }
 
-const STLViewer: React.FC<STLViewerProps> = ({ satelliteData }) => {
-  const mountRef = useRef<HTMLDivElement>(null);
-  let stlMesh: THREE.Mesh | undefined;
+const STLViewer: React.FC<{ satelliteData: string[] }> = ({ satelliteData }) => {
+  const mountRef = useRef<HTMLDivElement>(null);  // Ref for the 3D canvas
+  let stlMesh: THREE.Mesh | undefined;  // Mesh for the STL model
 
-  function parseSatelliteData(data: string) {
-    const locationMatch = data.match(/L\[(\-?\d+\.\d+),(\-?\d+\.\d+),(\-?\d+\.\d+)\]/);
+  const [currentData, setCurrentData] = useState<ParsedData | null>(null);  // Store current parsed data for display
+
+  // Function to parse the satellite data including Message ID and Date
+  const parseSatelliteData = (data: string): ParsedData | null => {
+    const messageIdMatch = data.match(/Message\s(\d+)/);
+    const locationMatch = data.match(/L\[(\-?\d+\.\d+),(\-?\d+\.\d+),(\d+\.\d+)\]/);
     const rotationMatch = data.match(/R\[(\-?\d+\.\d+),(\-?\d+\.\d+),(\-?\d+\.\d+)\]/);
-    
-    if (locationMatch && rotationMatch) {
-      const latitude = parseFloat(locationMatch[1]);
-      const longitude = parseFloat(locationMatch[2]);
-      const altitude = parseFloat(locationMatch[3]);
+    const dateMatch = data.match(/RD\[(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})\]/);  // Extract date-time
 
-      const yaw = parseFloat(rotationMatch[1]);
-      const pitch = parseFloat(rotationMatch[2]);
-      const roll = parseFloat(rotationMatch[3]);
+    if (messageIdMatch && locationMatch && rotationMatch && dateMatch) {
+      const messageId = messageIdMatch[1];
 
-      const R = 6371;
-      const latRad = latitude * (Math.PI / 180);
-      const lonRad = longitude * (Math.PI / 180);
+      // Parse the date into a JavaScript Date object
+      const date = new Date(dateMatch[1]);
 
-      const x = (R + altitude) * Math.cos(latRad) * Math.cos(lonRad);
-      const y = (R + altitude) * Math.cos(latRad) * Math.sin(lonRad);
-      const z = (R + altitude) * Math.sin(latRad);
+      const location = {
+        latitude: parseFloat(locationMatch[1]),
+        longitude: parseFloat(locationMatch[2]),
+        altitude: parseFloat(locationMatch[3]),
+      };
+      const rotation = {
+        yaw: parseFloat(rotationMatch[1]),
+        pitch: parseFloat(rotationMatch[2]),
+        roll: parseFloat(rotationMatch[3]),
+      };
 
-      return { position: { x, y, z }, rotation: { yaw, pitch, roll } };
+      // Convert lat/lon/alt to Cartesian coordinates
+      const latRad = location.latitude * (Math.PI / 180);
+      const lonRad = location.longitude * (Math.PI / 180);
+      const R = 6371;  // Approximate Earth's radius in km
+      const x = (R + location.altitude) * Math.cos(latRad) * Math.cos(lonRad);
+      const y = (R + location.altitude) * Math.cos(latRad) * Math.sin(lonRad);
+      const z = (R + location.altitude) * Math.sin(latRad);
+
+      return { messageId, date, position: { x, y, z }, rotation };
     }
 
     return null;
-  }
+  };
 
   useEffect(() => {
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
-    camera.position.z = 1000;
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+    camera.position.set(0, 0, 1500);  // Move camera farther away to view larger objects
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -54,15 +71,17 @@ const STLViewer: React.FC<STLViewerProps> = ({ satelliteData }) => {
     scene.add(ambientLight);
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 5);  // Strong directional light
-    directionalLight.position.set(0, 0, 1).normalize();
+    directionalLight.position.set(0, 500, 500).normalize();  // Position the light above and to the side
     scene.add(directionalLight);
 
     const loader = new STLLoader();
     loader.load('/model.stl', (geometry) => {
       const material = new THREE.MeshStandardMaterial({ color: 0xff0000 });  // Red color
       stlMesh = new THREE.Mesh(geometry, material);
-      stlMesh.scale.set(5, 5, 5);  // Increase scale
-      stlMesh.position.set(0, 0, 0);  // Center the model
+      
+      // Set an initial scale to ensure the model is visible
+      stlMesh.scale.set(50, 50, 50);  // Increase scale significantly
+      stlMesh.position.set(0, 0, 0);  // Center the model in the scene
       scene.add(stlMesh);
       console.log('STL model loaded and added to the scene.');
     });
@@ -74,35 +93,38 @@ const STLViewer: React.FC<STLViewerProps> = ({ satelliteData }) => {
         const parsedData = parseSatelliteData(satelliteData[currentIndex]);
 
         if (parsedData) {
-          const { position, rotation } = parsedData;
+          const { position, rotation, messageId, date } = parsedData;
 
-          // Restrict position values to keep the model in view
-          const x = Math.min(Math.max(position.x, -500), 500);
-          const y = Math.min(Math.max(position.y, -500), 500);
-          const z = Math.min(Math.max(position.z, 0), 1000);
+          // Update state with the current parsed data for display
+          setCurrentData(parsedData);
 
-          stlMesh.position.set(x, y, z);
+          // Log parsed data to ensure it's being processed
+          console.log("Message ID:", messageId);
+          console.log("Date:", date);
+          console.log("Updating model position:", position);
+          console.log("Updating model rotation:", rotation);
 
-          // Restrict rotation values to keep the model oriented
+          // Set the position and rotation of the STL model
+          stlMesh.position.set(position.x, position.y, position.z);
           stlMesh.rotation.set(
-            THREE.MathUtils.degToRad(Math.min(Math.max(rotation.pitch, -90), 90)),
-            THREE.MathUtils.degToRad(Math.min(Math.max(rotation.yaw, -180), 180)),
-            THREE.MathUtils.degToRad(Math.min(Math.max(rotation.roll, -90), 90))
+            THREE.MathUtils.degToRad(rotation.pitch),
+            THREE.MathUtils.degToRad(rotation.yaw),
+            THREE.MathUtils.degToRad(rotation.roll)
           );
-          console.log('Updated position:', stlMesh.position);
-          console.log('Updated rotation:', stlMesh.rotation);
-        }
 
-        currentIndex += 1;
+          currentIndex += 1;  // Move to the next data point
+        }
+      } else {
+        currentIndex = 0;  // Reset to loop over the data
       }
     };
 
-    const interval = setInterval(updateModel, 1000);
+    const interval = setInterval(updateModel, 1000);  // Update every second
 
     const animate = () => {
       requestAnimationFrame(animate);
       renderer.render(scene, camera);
-      console.log('Rendering frame');  // Add logging for each frame
+      console.log("Rendering scene...");  // Log to ensure the animation loop is running
     };
 
     animate();
@@ -115,7 +137,23 @@ const STLViewer: React.FC<STLViewerProps> = ({ satelliteData }) => {
     };
   }, [satelliteData]);
 
-  return <div ref={mountRef} />;
+  return (
+    <div>
+      <div ref={mountRef} style={{ height: '90vh' }} />
+      {/* Visualize Message ID and Date below the 3D model */}
+      <div style={{ textAlign: 'center', color: 'white', paddingTop: '10px' }}>
+        {currentData ? (
+          <>
+            <p><strong>Message ID:</strong> {currentData.messageId}</p>
+            {/* Format the date for display */}
+            <p><strong>Date:</strong> {currentData.date.toLocaleString()}</p>
+          </>
+        ) : (
+          <p>No data available</p>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default STLViewer;
