@@ -1,14 +1,27 @@
-// src/App.tsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import STLViewer from './STLViewer';  // Assuming you have this for your model viewer
+import STLViewer from './STLViewer_updated';  // Importing the STLViewer component
 
 const App: React.FC = () => {
+  // State to hold the satellite data
+  const [satelliteData, setSatelliteData] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Fetch CSV data from the public folder
+    fetch('/Satellite_Trajectory.csv')
+      .then(response => response.text())
+      .then(data => {
+        // Split CSV data into rows
+        const rows = data.split('\n');
+        setSatelliteData(rows); // Set the rows as satelliteData
+      });
+  }, []);
+
   return (
     <div>
       <header style={{ textAlign: 'center', padding: '20px' }}>
         <h1>ANT61 Beacon Satellite Detection</h1>
-        {/* Adjust button position */}
+        {/* Button to navigate to another page */}
         <div style={{
           position: 'absolute',
           top: '50px',  // Distance from the top
@@ -20,8 +33,8 @@ const App: React.FC = () => {
         </div>
       </header>
       <div style={{ height: '100vh', backgroundColor: 'black' }}>
-        {/* STL model viewer */}
-        <STLViewer />
+        {/* STL model viewer with satellite data */}
+        <STLViewer satelliteData={satelliteData} />
       </div>
     </div>
   );
