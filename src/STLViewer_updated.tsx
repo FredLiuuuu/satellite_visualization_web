@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-
 // Define the interface for parsed data
 interface ParsedData {
   messageId: string;
@@ -77,12 +76,43 @@ const STLViewer: React.FC<{ satelliteData: string[] }> = ({ satelliteData }) => 
     scene.add(directionalLight);
 
     // Create a sphere at the center of the scene
-    const sphereGeometry = new THREE.SphereGeometry(200, 32, 32);  // Sphere with radius 20
-    const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff });  // Blue color
-    sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-    sphere.position.set(0, 0, 0);  // Center the sphere at (0, 0, 0)
-    scene.add(sphere);  // Add sphere to the scene
+    // 创建一个球体并将其设置为地球
+   const textureLoader = new THREE.TextureLoader();
+
+  // 加载地球纹理
+   const earthTexture = textureLoader.load('/earth.jpg');
+   const cloudsTexture = textureLoader.load('/earth.jpg');
+   const starsTexture = textureLoader.load('/earth.jpg');
+// 创建地球的几何体
+   const sphereGeometry = new THREE.SphereGeometry(1000, 32, 32); // 球体半径为200
+
+// 创建地球的材质
     
+   const sphereMaterial = new THREE.MeshStandardMaterial({
+   map: earthTexture, // 地球的纹理
+   color: 0xffffff,
+   metalness: 0.5,
+   roughness: 0.7
+
+   
+
+});
+
+
+
+// 创建地球网格（几何体+材质）
+   const earth = new THREE.Mesh(sphereGeometry, sphereMaterial);
+
+// 设置地球的位置为场景中心
+   earth.position.set(0, 0, 0);
+
+// 将地球添加到场景中
+   scene.add(earth);
+
+  // Create OrbitControls for dragging
+   const controls = new OrbitControls(camera, renderer.domElement);
+   controls.enableDamping = true;  // Enable damping for smooth controls
+   controls.dampingFactor = 0.05;
 
     const loader = new STLLoader();
     loader.load('/model.stl', (geometry) => {
@@ -95,11 +125,6 @@ const STLViewer: React.FC<{ satelliteData: string[] }> = ({ satelliteData }) => 
       scene.add(stlMesh);
       console.log('STL model loaded and added to the scene.');
     });
-
-    // Create OrbitControls for dragging
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;  // Enable damping for smooth controls
-    controls.dampingFactor = 0.05;
 
     let currentIndex = 0;
 
@@ -138,8 +163,8 @@ const STLViewer: React.FC<{ satelliteData: string[] }> = ({ satelliteData }) => 
 
     const animate = () => {
       requestAnimationFrame(animate);
-      controls.update();  // Update controls on each frame
       renderer.render(scene, camera);
+      controls.update();  // Update controls on each frame
       console.log("Rendering scene...");  // Log to ensure the animation loop is running
     };
 
