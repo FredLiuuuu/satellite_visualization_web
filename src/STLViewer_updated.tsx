@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 // Define the interface for parsed data
 interface ParsedData {
@@ -95,6 +96,11 @@ const STLViewer: React.FC<{ satelliteData: string[] }> = ({ satelliteData }) => 
       console.log('STL model loaded and added to the scene.');
     });
 
+    // Create OrbitControls for dragging
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;  // Enable damping for smooth controls
+    controls.dampingFactor = 0.05;
+
     let currentIndex = 0;
 
     const updateModel = () => {
@@ -132,6 +138,7 @@ const STLViewer: React.FC<{ satelliteData: string[] }> = ({ satelliteData }) => 
 
     const animate = () => {
       requestAnimationFrame(animate);
+      controls.update();  // Update controls on each frame
       renderer.render(scene, camera);
       console.log("Rendering scene...");  // Log to ensure the animation loop is running
     };
