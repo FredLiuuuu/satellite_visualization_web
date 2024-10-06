@@ -13,6 +13,8 @@ interface ParsedData {
 const STLViewer: React.FC<{ satelliteData: string[] }> = ({ satelliteData }) => {
   const mountRef = useRef<HTMLDivElement>(null);  // Ref for the 3D canvas
   let stlMesh: THREE.Mesh | undefined;  // Mesh for the STL model
+  let sphere: THREE.Mesh | undefined;  // For storing the central sphere object
+
 
   const [currentData, setCurrentData] = useState<ParsedData | null>(null);  // Store current parsed data for display
 
@@ -74,13 +76,21 @@ const STLViewer: React.FC<{ satelliteData: string[] }> = ({ satelliteData }) => 
     directionalLight.position.set(0, 500, 500).normalize();  // Position the light above and to the side
     scene.add(directionalLight);
 
+    // Create a sphere at the center of the scene
+    const sphereGeometry = new THREE.SphereGeometry(200, 32, 32);  // Sphere with radius 20
+    const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff });  // Blue color
+    sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+    sphere.position.set(0, 0, 0);  // Center the sphere at (0, 0, 0)
+    scene.add(sphere);  // Add sphere to the scene
+    
+
     const loader = new STLLoader();
     loader.load('/model.stl', (geometry) => {
       const material = new THREE.MeshStandardMaterial({ color: 0xff0000 });  // Red color
       stlMesh = new THREE.Mesh(geometry, material);
       
       // Set an initial scale to ensure the model is visible
-      stlMesh.scale.set(50, 50, 50);  // Increase scale significantly
+      stlMesh.scale.set(2, 2, 2);  // Increase scale significantly
       stlMesh.position.set(0, 0, 0);  // Center the model in the scene
       scene.add(stlMesh);
       console.log('STL model loaded and added to the scene.');
@@ -105,7 +115,7 @@ const STLViewer: React.FC<{ satelliteData: string[] }> = ({ satelliteData }) => 
           console.log("Updating model rotation:", rotation);
 
           // Set the position and rotation of the STL model
-          stlMesh.position.set(position.x, position.y, position.z);
+          stlMesh.position.set(position.x/6, position.y/6, position.z/6);
           stlMesh.rotation.set(
             THREE.MathUtils.degToRad(rotation.pitch),
             THREE.MathUtils.degToRad(rotation.yaw),
