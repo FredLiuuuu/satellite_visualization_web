@@ -15,7 +15,6 @@ const STLViewer: React.FC<{ satelliteData: string[] }> = ({ satelliteData }) => 
   let stlMesh: THREE.Mesh | undefined;  // Mesh for the STL model
   let sphere: THREE.Mesh | undefined;  // For storing the central sphere object
 
-
   const [currentData, setCurrentData] = useState<ParsedData | null>(null);  // Store current parsed data for display
 
   // Function to parse the satellite data including Message ID and Date
@@ -150,12 +149,36 @@ const STLViewer: React.FC<{ satelliteData: string[] }> = ({ satelliteData }) => 
   return (
     <div>
       <div ref={mountRef} style={{ height: '90vh' }} />
+      
+      {/* Data table displaying current data */}
+      <div style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: 'rgba(255, 255, 255, 0.8)', padding: '10px', borderRadius: '5px' }}>
+        {currentData ? (
+          <table>
+            <thead>
+              <tr>
+                <th style={{ fontSize: '29px' }}>Date</th>
+                <th style={{ fontSize: '29px' }}>Position (x, y, z)</th>
+                <th style={{ fontSize: '29px' }}>Rotation (yaw, pitch, roll)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{ fontSize: '28px' }}>{currentData.date.toLocaleString()}</td>
+                <td style={{ fontSize: '28px' }}>{`(${currentData.position.x.toFixed(2)}, ${currentData.position.y.toFixed(2)}, ${currentData.position.z.toFixed(2)})`}</td>
+                <td style={{ fontSize: '28px' }}>{`(${currentData.rotation.yaw.toFixed(2)}, ${currentData.rotation.pitch.toFixed(2)}, ${currentData.rotation.roll.toFixed(2)})`}</td>
+              </tr>
+            </tbody>
+          </table>
+        ) : (
+          <p style={{ fontSize: '30px' }}>No data available</p>
+        )}
+      </div>
+
       {/* Visualize Message ID and Date below the 3D model */}
-      <div style={{ textAlign: 'center', color: 'white', paddingTop: '10px' }}>
+      <div style={{ textAlign: 'center', color: 'white', paddingTop: '10px', fontSize: '18px' }}>
         {currentData ? (
           <>
             <p><strong>Message ID:</strong> {currentData.messageId}</p>
-            {/* Format the date for display */}
             <p><strong>Date:</strong> {currentData.date.toLocaleString()}</p>
           </>
         ) : (
