@@ -45,9 +45,9 @@ const STLViewer: React.FC<{ satelliteData: string[] }> = ({ satelliteData }) => 
       const latRad = location.latitude * (Math.PI / 180);
       const lonRad = location.longitude * (Math.PI / 180);
       const R = 6371;  // Approximate Earth's radius in km
-      const x = (R + location.altitude) * Math.cos(latRad) * Math.cos(lonRad);
-      const y = (R + location.altitude) * Math.cos(latRad) * Math.sin(lonRad);
-      const z = (R + location.altitude) * Math.sin(latRad);
+      const x = (R + location.altitude) * Math.sin(latRad) * Math.sin(lonRad);
+      const y = (R + location.altitude) * Math.sin(latRad) * Math.cos(lonRad);
+      const z = (R + location.altitude) * Math.cos(latRad);
 
       return { messageId, date, position: { x, y, z }, rotation };
     }
@@ -82,6 +82,9 @@ const STLViewer: React.FC<{ satelliteData: string[] }> = ({ satelliteData }) => 
 
 // 地球纹理
    const earthTexture = textureLoader.load('/earth.jpg');
+   earthTexture.wrapS = THREE.RepeatWrapping;
+   earthTexture.repeat.x = 1; 
+   earthTexture.offset.set(0.25, 0);  // 根据需要调整偏移值
    
 
 // 创建地球
@@ -98,7 +101,7 @@ const STLViewer: React.FC<{ satelliteData: string[] }> = ({ satelliteData }) => 
 
 // 星空背景
    const starTexture = textureLoader.load('/stars.jpg');
-   const starGeometry = new THREE.SphereGeometry(2000, 64, 64);
+   const starGeometry = new THREE.SphereGeometry(3000, 64, 64);
    const starMaterial = new THREE.MeshBasicMaterial({
      map: starTexture,
      side: THREE.BackSide // 反向球体，显示在球体内部
