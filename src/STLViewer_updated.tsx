@@ -77,37 +77,39 @@ const STLViewer: React.FC<{ satelliteData: string[] }> = ({ satelliteData }) => 
 
     // Create a sphere at the center of the scene
     // 创建一个球体并将其设置为地球
+   // 加载器
    const textureLoader = new THREE.TextureLoader();
 
-  // 加载地球纹理
+// 地球纹理
    const earthTexture = textureLoader.load('/earth.jpg');
-   const cloudsTexture = textureLoader.load('/earth.jpg');
-   const starsTexture = textureLoader.load('/earth.jpg');
-// 创建地球的几何体
-   const sphereGeometry = new THREE.SphereGeometry(1000, 32, 32); // 球体半径为200
+   
 
-// 创建地球的材质
-    
-   const sphereMaterial = new THREE.MeshStandardMaterial({
-   map: earthTexture, // 地球的纹理
-   color: 0xffffff,
-   metalness: 0.5,
-   roughness: 0.7
+// 创建地球
+   const earthGeometry = new THREE.SphereGeometry(800, 32, 32);
+   const earthMaterial = new THREE.MeshStandardMaterial({
+     map: earthTexture,
+     
+     color: 0xffffff,  // 白色地球（可以调整）
+     metalness: 0.4,
+     roughness: 0.6
+});
+   const earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
+   scene.add(earthMesh);
+
+// 星空背景
+   const starTexture = textureLoader.load('/stars.jpg');
+   const starGeometry = new THREE.SphereGeometry(2000, 64, 64);
+   const starMaterial = new THREE.MeshBasicMaterial({
+     map: starTexture,
+     side: THREE.BackSide // 反向球体，显示在球体内部
+});
+   const starMesh = new THREE.Mesh(starGeometry, starMaterial);
+   scene.add(starMesh);
+
+
 
    
 
-});
-
-
-
-// 创建地球网格（几何体+材质）
-   const earth = new THREE.Mesh(sphereGeometry, sphereMaterial);
-
-// 设置地球的位置为场景中心
-   earth.position.set(0, 0, 0);
-
-// 将地球添加到场景中
-   scene.add(earth);
 
   // Create OrbitControls for dragging
    const controls = new OrbitControls(camera, renderer.domElement);
@@ -166,6 +168,18 @@ const STLViewer: React.FC<{ satelliteData: string[] }> = ({ satelliteData }) => 
       renderer.render(scene, camera);
       controls.update();  // Update controls on each frame
       console.log("Rendering scene...");  // Log to ensure the animation loop is running
+      function animate() {
+        requestAnimationFrame(animate);
+      
+        // 旋转地球和云层
+        earthMesh.rotation.y += 0.001;
+        //cloudMesh.rotation.y += 0.0015;
+      
+        renderer.render(scene, camera);
+      }
+      
+      animate();
+      
     };
 
     animate();
