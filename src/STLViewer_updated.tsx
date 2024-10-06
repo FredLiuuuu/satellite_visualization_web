@@ -85,7 +85,7 @@ const STLViewer: React.FC<{ satelliteData: string[] }> = ({ satelliteData }) => 
    
 
 // 创建地球
-   const earthGeometry = new THREE.SphereGeometry(1100, 32, 32);
+   const earthGeometry = new THREE.SphereGeometry(1000, 32, 32);
    const earthMaterial = new THREE.MeshStandardMaterial({
      map: earthTexture,
      
@@ -122,7 +122,7 @@ const STLViewer: React.FC<{ satelliteData: string[] }> = ({ satelliteData }) => 
       stlMesh = new THREE.Mesh(geometry, material);
       
       // Set an initial scale to ensure the model is visible
-      stlMesh.scale.set(1.5, 1.5, 1.5);  // Increase scale significantly
+      stlMesh.scale.set(1, 1, 1);  // Increase scale significantly
       stlMesh.position.set(0, 0, 0);  // Center the model in the scene
       scene.add(stlMesh);
       console.log('STL model loaded and added to the scene.');
